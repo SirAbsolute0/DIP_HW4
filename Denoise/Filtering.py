@@ -1,3 +1,7 @@
+from ctypes import sizeof
+from threading import local
+from unittest import result
+import numpy as np
 
 class Filtering:
 
@@ -34,14 +38,23 @@ class Filtering:
         roi: region of interest (a list/array of intensity values)
         returns the arithmetic mean value of the roi"""
         
-        return 0
+        mXn = np.size(roi)
+
+        sum = 0
+        result = 0
+
+        for each in roi:
+            sum += each
+
+        result = (1/mXn) * sum
+        return result
 
     def get_geometric_mean(self, roi):
         """Computes the geometric mean for the input roi
         takes as input:
         roi: region of interest (a list/array of intensity values)
         returns the geometric mean value of the roi"""
-        
+        print("testing_geometric_mean")
         return 0
 
     def get_local_noise(self, roi):
@@ -90,6 +103,45 @@ class Filtering:
         the adaptive median filter as it has two stages, you are welcome to do that.
         For the adaptive median filter assume that S_max (maximum allowed size of the window) is 15
         """
-                       
-        return self.image
+        local_img = self.image
+        
+        #Get a local copy of the image and initiate padded 0s
+        padded_img = np.zeros([local_img.shape[0] + (self.filter_size - 1), local_img.shape[1] + (self.filter_size - 1)])
+
+        #padded 0s
+        for x in range(0, local_img.shape[0]):
+            for y in range(0, local_img.shape[1]):
+                padded_img[x + int((self.filter_size - 1)/2), y + int((self.filter_size - 1)/2)] = local_img[x, y]
+        
+        temp = []
+        
+        #pass in roi for each mean calculation
+        for x in range(0, padded_img.shape[0] - (self.filter_size - 1)):
+            for y in range(0, padded_img.shape[1] - (self.filter_size - 1)):
+                for z in range(x, x + (self.filter_size - 1)):
+                    for k in range(y, y + (self.filter_size - 1)):
+                        temp.append(padded_img[z, k])
+
+
+                padded_img[x + int((self.filter_size - 1)/2), y + int((self.filter_size - 1)/2)] = self.filter(temp)
+                
+                temp = []
+
+        result_img = padded_img.copy()
+
+        #Deleting padded zeros from final picture
+        result_img = np.delete(result_img, result_img.shape[0] - 1, 0)
+        result_img = np.delete(result_img, result_img.shape[1] - 1, 1)
+        result_img = np.delete(result_img, 0, 0)
+        result_img = np.delete(result_img, 0, 1)
+
+        while(result_img.shape[0] > local_img.shape[0]):
+            result_img = np.delete(result_img, 0, 0)
+            result_img = np.delete(result_img, local_img.shape[0] + 1, 0)
+
+        while(result_img.shape[1] > local_img.shape[1]):
+            result_img = np.delete(result_img, 0, 1)
+            result_img = np.delete(result_img, local_img.shape[1] + 1, 1)
+        
+        return result_img
 
