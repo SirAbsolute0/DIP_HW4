@@ -96,39 +96,14 @@ class Filtering:
         return result
 
 
-    def get_adaptive_median(self, roi):
+    def get_adaptive_median(self):
         """Use this function to implment the adaptive median.
         It is left up to the student to define the input to this function and call it as needed. Feel free to create
         additional functions as needed.
         """
-        #variables to calculate adaptive median
-        result = 0
-        Zxy = roi[int((np.size(roi) - 1)/2)]
-        roi = sorted(roi)
-        Zmin = min(roi)
-        Zmax = max(roi)
-        Zmed = roi[int((np.size(roi) - 1)/2)]
-        S = self.filter_size
         
-        A1 = Zmed - Zmin
-        A2 = Zmed - Zmax
+        return 0
 
-        if(A1 > 0 and A2 < 0):
-            value = self.adaptive_median_B(Zxy, Zmin, Zmax, Zmed)
-            return value
-        else:
-            if(S < self.S_max):
-                return -1
-            else:
-                return Zmed
-    def adaptive_median_B(self, Zxy, Zmin, Zmax, Zmed):
-        B1 = Zxy - Zmin
-        B2 = Zxy - Zmax
-
-        if(B1 > 0 and B2 < 0):
-            return Zxy
-        else:
-            return Zmed
 
     def filtering(self):
         """performs filtering on an image containing gaussian or salt & pepper noise
@@ -150,53 +125,43 @@ class Filtering:
         the adaptive median filter as it has two stages, you are welcome to do that.
         For the adaptive median filter assume that S_max (maximum allowed size of the window) is 15
         """
-        loop = True
-        while(loop == True):
-            local_img = self.image.copy()
-            filter_size = self.filter_size
-            #Get a local copy of the image and initiate padded 0s
-            padded_img = np.zeros([local_img.shape[0] + (filter_size - 1), local_img.shape[1] + (filter_size - 1)])
+        local_img = self.image.copy()
+        
+        #Get a local copy of the image and initiate padded 0s
+        padded_img = np.zeros([local_img.shape[0] + (self.filter_size - 1), local_img.shape[1] + (self.filter_size - 1)])
 
-            #padded 0s
-            for x in range(0, local_img.shape[0]):
-                for y in range(0, local_img.shape[1]):
-                    padded_img[x + int((filter_size - 1)/2), y + int((filter_size - 1)/2)] = local_img[x, y]
-            
-            padded_img2 = padded_img.copy()
-            #temp holds the temporary list for roi
-            temp = []
+        #padded 0s
+        for x in range(0, local_img.shape[0]):
+            for y in range(0, local_img.shape[1]):
+                padded_img[x + int((self.filter_size - 1)/2), y + int((self.filter_size - 1)/2)] = local_img[x, y]
+        
+        padded_img2 = padded_img.copy()
+        #temp holds the temporary list for roi
+        temp = []
 
-            #pass in roi for each mean calculation
-            for x in range(0, padded_img.shape[0] - (filter_size - 1)):
-                for y in range(0, padded_img.shape[1] - (filter_size - 1)):
-                    for z in range(x, x + filter_size):
-                        for k in range(y, y + filter_size):
-                            temp.append(padded_img2[z, k])
+        #pass in roi for each mean calculation
+        for x in range(0, padded_img.shape[0] - (self.filter_size - 1)):
+            for y in range(0, padded_img.shape[1] - (self.filter_size - 1)):
+                for z in range(x, x + self.filter_size):
+                    for k in range(y, y + self.filter_size):
+                        temp.append(padded_img2[z, k])
 
-                    temporary_value = self.filter(temp)
-                    if(temporary_value != -1):
-                        padded_img[x + int((filter_size - 1)/2), y + int((filter_size - 1)/2)] = temporary_value
-                        temp = []
-                        loop = False
+                padded_img[x + int((self.filter_size - 1)/2), y + int((self.filter_size - 1)/2)] = self.filter(temp)
+                temp = []
 
-                    elif(temporary_value == -1):
-                        self.filter_size += 1
-                        adaptive_img = self.filtering()
-                        return adaptive_img
-                        
-            
-            result_img = padded_img.copy()
-            #Deleting padded zeros from final picture
-            while(result_img.shape[0] > local_img.shape[0] + ((filter_size - 1)/2)):
-                result_img = np.delete(result_img, result_img.shape[0] - 1, 0)
-            
-            while(result_img.shape[0] > local_img.shape[0]):
-                result_img = np.delete(result_img, 0, 0)
 
-            while(result_img.shape[1] > local_img.shape[1] + ((filter_size - 1)/2)):
-                result_img = np.delete(result_img, result_img.shape[1] - 1, 1)
-            
-            while(result_img.shape[1] > local_img.shape[1]):
-                result_img = np.delete(result_img, 0, 1) 
+        result_img = padded_img.copy()
+        #Deleting padded zeros from final picture
+        while(result_img.shape[0] > local_img.shape[0] + ((self.filter_size - 1)/2)):
+            result_img = np.delete(result_img, result_img.shape[0] - 1, 0)
+        
+        while(result_img.shape[0] > local_img.shape[0]):
+            result_img = np.delete(result_img, 0, 0)
+
+        while(result_img.shape[1] > local_img.shape[1] + ((self.filter_size - 1)/2)):
+            result_img = np.delete(result_img, result_img.shape[1] - 1, 1)
+        
+        while(result_img.shape[1] > local_img.shape[1]):
+            result_img = np.delete(result_img, 0, 1) 
         return result_img
 
