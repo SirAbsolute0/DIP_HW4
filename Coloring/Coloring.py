@@ -1,3 +1,7 @@
+from threading import local
+import numpy as np
+import random
+import cmath
 class Coloring:
 
     def intensity_slicing(self, image, n_slices):
@@ -16,9 +20,44 @@ class Coloring:
  
        returns colored image
        '''
+       #Create variables for slicing
+        local_img = image.copy()
+        slice_value = int(255/n_slices)
+        value = slice_value
+        colors = []
 
-        return image
+        #Create regions depend on the number of slices, if slice is uneven => do n+1 slices
+        while(value <= 255):
+            R = random.randint(0, 254)
+            G = random.randint(0, 254)
+            B = random.randint(0, 254)
+            colors.append((R, G, B))
+            value += slice_value
+        
+        #Create an empty color picture
+        final_img = np.zeros((local_img.shape[0],local_img.shape[1],3))
 
+        #intensity slicing depending on the greyscale level
+        for x in range(0, local_img.shape[0]):
+            for y in range(0, local_img.shape[1]):
+                for i in range(0, n_slices):
+                    if(local_img[x, y] <= (slice_value*i)):
+                        final_img[x, y] = colors[i]
+                        break
+                    else:
+                        pass
+
+        return final_img
+
+    def color_assign(pixel, theta, i):
+        
+        k = (255*(i - 1) + 255*i)/2
+        R = 255*cmath.sin(k + theta[0])
+        G = 255*cmath.sin(k + theta[1])
+        B = 255*cmath.sin(k + theta[2])
+
+        result = [R,G,B]
+        return result
     def color_transformation(self, image, n_slices, theta):
         '''
         Convert greyscale image to color image using color transformation technique.
@@ -36,8 +75,34 @@ class Coloring:
   
         returns colored image
         '''
+       #Create variables for color transformation
+        local_img = image.copy()
+        slice_value = int(255/n_slices)
+        value = slice_value
+        colors = []
 
-        return image
+        #Create regions depend on the number of slices, if slice is uneven => do n+1 slices
+        while(value <= 255):
+            R = random.randint(0, 254)
+            G = random.randint(0, 254)
+            B = random.randint(0, 254)
+            colors.append((R, G, B))
+            value += slice_value
+
+        #Create an empty color picture
+        final_img = np.zeros((local_img.shape[0],local_img.shape[1],3))
+
+        #intensity slicing depending on the greyscale level
+        for x in range(0, local_img.shape[0]):
+            for y in range(0, local_img.shape[1]):
+                for i in range(0, n_slices):
+                    if(local_img[x, y] <= (slice_value*i)):
+                        final_img[x, y] = self.color_assign(final_img[x, y], theta, i)
+                        break
+                    else:
+                        pass
+
+        return final_img
 
 
 
