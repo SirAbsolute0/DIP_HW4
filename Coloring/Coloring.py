@@ -1,7 +1,7 @@
 from threading import local
 import numpy as np
 import random
-import cmath
+import math
 class Coloring:
 
     def intensity_slicing(self, image, n_slices):
@@ -22,12 +22,14 @@ class Coloring:
        '''
        #Create variables for slicing
         local_img = image.copy()
-        slice_value = int(255/n_slices)
-        value = slice_value
+        interval = n_slices + 1
+
+        slice_value = int(255/interval)
+        value = 0
         colors = []
 
         #Create regions depend on the number of slices, if slice is uneven => do n+1 slices
-        while(value <= 255):
+        while(value + slice_value <= 255):
             R = random.randint(0, 254)
             G = random.randint(0, 254)
             B = random.randint(0, 254)
@@ -40,24 +42,26 @@ class Coloring:
         #intensity slicing depending on the greyscale level
         for x in range(0, local_img.shape[0]):
             for y in range(0, local_img.shape[1]):
-                for i in range(0, n_slices):
-                    if(local_img[x, y] <= (slice_value*i)):
-                        final_img[x, y] = colors[i]
+                for i in range(1, interval + 1):
+                    if(local_img[x, y] <= (slice_value*i) or (local_img[x , y] + slice_value > 255 and i == interval)):
+                        final_img[x, y] = colors[i - 1]
                         break
                     else:
                         pass
 
         return final_img
 
-    def color_assign(pixel, theta, i):
+    #Function created for color transformation
+    def color_assign(self, theta, i, slice_value):
         
-        k = (255*(i - 1) + 255*i)/2
-        R = 255*cmath.sin(k + theta[0])
-        G = 255*cmath.sin(k + theta[1])
-        B = 255*cmath.sin(k + theta[2])
+        k = (slice_value*(i - 1) + slice_value*i)/2
+        R = 255*math.sin(k + theta[0])
+        G = 255*math.sin(k + theta[1])
+        B = 255*math.sin(k + theta[2])
 
         result = [R,G,B]
         return result
+
     def color_transformation(self, image, n_slices, theta):
         '''
         Convert greyscale image to color image using color transformation technique.
@@ -77,17 +81,9 @@ class Coloring:
         '''
        #Create variables for color transformation
         local_img = image.copy()
-        slice_value = int(255/n_slices)
-        value = slice_value
-        colors = []
-
-        #Create regions depend on the number of slices, if slice is uneven => do n+1 slices
-        while(value <= 255):
-            R = random.randint(0, 254)
-            G = random.randint(0, 254)
-            B = random.randint(0, 254)
-            colors.append((R, G, B))
-            value += slice_value
+        interval = n_slices + 1
+        slice_value = int(255/interval)
+        true_slice_value = 255/interval
 
         #Create an empty color picture
         final_img = np.zeros((local_img.shape[0],local_img.shape[1],3))
@@ -95,9 +91,9 @@ class Coloring:
         #intensity slicing depending on the greyscale level
         for x in range(0, local_img.shape[0]):
             for y in range(0, local_img.shape[1]):
-                for i in range(0, n_slices):
-                    if(local_img[x, y] <= (slice_value*i)):
-                        final_img[x, y] = self.color_assign(final_img[x, y], theta, i)
+                for i in range(1, interval + 1):
+                    if(local_img[x, y] <= (slice_value*i) or (local_img[x , y] + slice_value > 255 and i == interval)):
+                        final_img[x, y] = self.color_assign(theta, i, true_slice_value)
                         break
                     else:
                         pass
